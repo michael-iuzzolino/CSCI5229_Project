@@ -1,6 +1,5 @@
 #ifndef projectManager
 #define projectManager
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -28,11 +27,7 @@ extern "C" {
 #define Cos(th) cos(3.1415926/180*(th))
 #define Sin(th) sin(3.1415926/180*(th))
 
-void ErrCheck(const char* where);
 void Fatal(const char* format , ...);
-void Print(const char* format , ...);
-int  LoadOBJ(const char* file);
-unsigned int LoadTexBMP(const char* file);
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,63 @@
+Project
+
+Michael L. Iuzzolino
+CSCI4229/5229 Fall 2018
+
+Key Bindings
+============
+  General
+  -------
+  g                     Toggle between First Person and 'God' mode
+  ESC                   Exit
+
+  Terrain
+  -------
+  t                     Toggle terrain on/off
+  T                     Toggle terrain mesh on/off
+  n                     Toggle terrain normals on/off
+
+  Skybox / Lighting
+  -----------------
+  r                     Toggle skybox rotation
+  R                     Change skybox rotation rates
+  shift+l / L           Toggle Lighting On/Off
+  shift+k               Toggle Light Control Mode
+
+      Light Control
+      -------------
+      u/o                   Move light up/down
+      j/l                   Move light left/right
+      i/k                   Move light forward/backward
+
+  Camera Controls
+  ---------------
+  0                     Toggle view mode (view all cameras simultaneously ON/OFF)
+  m/M                   Switch between cameras (left, center, right) in primary viewport
+
+  Player Controls
+  ---------------
+  a/d                   Look left/right
+  up/down arrows        Look up/down
+  left/right arrows     Look left/right
+  w/s                   Move forward/back
+  z/c                   Move up/down in y-direction
+  q/e                   Strafe left/right
+  Mouse (left click)    Toggle mouse look mode. View follows mouse when enabled.
+
+
+Remaining Work
+==============
+Primary
+-------
+- Add 3d trees and boulders
+- Add path
+- Bind camera to path and enable auto-follow
+- Fix lighting
+- Fix writing to bmp/png function (currently crashes the application)
+
+Secondary, if time permits
+--------------------------
+- Convert skybox to cubemap
+- Update water shader to reflect skybox
+- Add shadows
+- Post-processing effects (rain, underwater effect, etc.)

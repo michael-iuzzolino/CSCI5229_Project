@@ -2,31 +2,48 @@
 #include "projectManager.h"
 #include "LightClass.h"
 
-LightClass::LightClass(double worldTranslationChangeRate, double worldRotationChangeRate)
-{
-    translationChangeRate = worldTranslationChangeRate;
-    rotationChangeRate = worldRotationChangeRate;
-}
+LightClass::LightClass() {}
 
-void LightClass::init()
+void LightClass::initialize(int fixed)
 {
-    sourceRadius = 1;
+    translationChangeRate = 1;
+    rotationChangeRate = 5;
+    fixedToSkybox = fixed;
+    showLight = 1;
+    if (fixedToSkybox)
+    {
+        sourceRadius = 5;
+        radius = 150.5;
+        height = 40;
+        initAzimuth = 80;
+    }
+    else
+    {
+        sourceRadius = 8;
+        radius = 300.5;
+        height = 15;
+    }
+
     smoothShading = 1;
     lightingOn = 1;
     controlMode = 0;
-    moveRate = 0.1;
-    radius = 3.5;
-    height = 0.4;
+    userMoveRate = 5;
+
     emission = 0;
     ambient = 30;
     diffuse = 100;
-    specular = 0;
+    specular = 10;
     shininess = 0;
     shiny = 1;
 
     X = 0;
     Y = height;
     Z = 0;
+}
+
+void LightClass::updateAzimuthRotation(float newAzimuth)
+{
+    azimuth = newAzimuth + initAzimuth;
 }
 
 void LightClass::update()
@@ -44,7 +61,7 @@ void LightClass::update()
     else
     {
         position[0] = radius * Cos(azimuth);
-        position[1] = height;
+        position[1] = 2 * Cos(azimuth/2.0) + height;
         position[2] = radius * Sin(azimuth);
         position[3] = 1;
     }
@@ -53,12 +70,9 @@ void LightClass::update()
 
     if (lightingOn)
     {
-        float Emission[]  = {0.0,0.0,0.0,1.0};
         float Ambient[]   = {0.01*ambient, 0.01*ambient, 0.01*ambient,1.0};
         float Diffuse[]   = {0.01*diffuse, 0.01*diffuse, 0.01*diffuse,1.0};
         float Specular[]  = {specular,specular,specular,1.0};
-        float Shinyness[] = {16};
-        float RGBA[] = {1,1,1,1};
 
         //  OpenGL should normalize normal vectors
         glEnable(GL_NORMALIZE);
@@ -66,51 +80,12 @@ void LightClass::update()
         glEnable(GL_LIGHTING);
         //  Enable light 0
         glEnable(GL_LIGHT0);
-        //  Set ambient, diffuse, specular components and position of light 0
-        glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
-        glLightfv(GL_LIGHT0,GL_DIFFUSE ,Diffuse);
-        glLightfv(GL_LIGHT0,GL_SPECULAR,Specular);
-        glLightfv(GL_LIGHT0,GL_POSITION,position);
-        //  Set materials
-        glMaterialfv(GL_FRONT_AND_BACK,GL_SHININESS,Shinyness);
-        glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT,RGBA);
-        glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE,RGBA);
-        glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,Specular);
-        glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,Emission);
 
-        //
-        // GLfloat Ambient[] = {
-        //     0.01 * ambient,
-        //     0.01 * ambient,
-        //     0.01 * ambient,
-        //     1.0
-        // };
-        // GLfloat Diffuse[] = {
-        //     0.01 * diffuse,
-        //     0.01 * diffuse,
-        //     0.01 * diffuse,
-        //     1.0
-        // };
-        // GLfloat Specular[] = {
-        //     0.01 * specular,
-        //     0.01 * specular,
-        //     0.01 * specular,
-        //     1.0
-        // };
-        //
-        // glEnable(GL_NORMALIZE);
-        // //  Enable lighting
-        // glEnable(GL_LIGHTING);
-        // //  glColor sets ambient and diffuse color materials
-        // glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-        // glEnable(GL_COLOR_MATERIAL);
-        // //  Enable light 0
-        // glEnable(GL_LIGHT0);
-        // //  Set ambient, diffuse, specular components and position of light 0
-        // glLightfv(GL_LIGHT0, GL_AMBIENT, Ambient);
-        // glLightfv(GL_LIGHT0, GL_DIFFUSE, Diffuse);
-        // glLightfv(GL_LIGHT0, GL_SPECULAR, Specular);
-        // glLightfv(GL_LIGHT0, GL_POSITION, position);
+        //  Set ambient, diffuse, specular components and position of light 0
+        glLightfv(GL_LIGHT0,GL_AMBIENT , Ambient);
+        glLightfv(GL_LIGHT0,GL_DIFFUSE , Diffuse);
+        glLightfv(GL_LIGHT0,GL_SPECULAR, Specular);
+        glLightfv(GL_LIGHT0,GL_POSITION, position);
     }
     else
     {
@@ -127,7 +102,10 @@ void LightClass::render()
     glScaled(sourceRadius, sourceRadius, sourceRadius);
     //  White ball
     glColor3f(1, 1, 0);
-    glutSolidSphere(1.0, 16, 16);
+    if (showLight)
+    {
+        glutSolidSphere(1.0, 16, 16);
+    }
     //  Undo transformations
     glPopMatrix();
 }
@@ -139,22 +117,30 @@ void LightClass::keyPressUpdate(unsigned char key, double lookX, double lookY, d
         return;
     }
 
-    if (key == 'i') {
-        X += lookX * moveRate;
-        Z += lookZ * moveRate;
-    } else if (key == 'k') {
-        X -= lookX * moveRate;
-        Z -= lookZ * moveRate;
-    } else if (key == 'j') {
-        X += lookZ * moveRate;
-        Z -= lookX * moveRate;
-    } else if (key == 'l') {
-        X -= lookZ * moveRate;
-        Z += lookX * moveRate;
-    } else if (key == 'u') {
-        Y -= moveRate;
-    } else if (key == 'o') {
-        Y += moveRate;
+    switch (key)
+    {
+        case 'i':
+            X += lookX * userMoveRate;
+            Z += lookZ * userMoveRate;
+            break;
+        case 'k':
+            X -= lookX * userMoveRate;
+            Z -= lookZ * userMoveRate;
+            break;
+        case 'j':
+            X += lookZ * userMoveRate;
+            Z -= lookX * userMoveRate;
+            break;
+        case 'l':
+            X -= lookZ * userMoveRate;
+            Z += lookX * userMoveRate;
+            break;
+        case 'u':
+            Y -= userMoveRate;
+            break;
+        case 'o':
+            Y += userMoveRate;
+            break;
     }
 }
 
@@ -166,6 +152,7 @@ void LightClass::toggleOn()
 void LightClass::toggleControl()
 {
     controlMode = 1 - controlMode;
+    // showLight = controlMode;
 }
 
 void LightClass::disable()

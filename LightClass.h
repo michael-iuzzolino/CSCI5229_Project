@@ -4,13 +4,16 @@
 class LightClass
 {
 public:
-    double azimuth;
+    int fixedToSkybox;
+    double initAzimuth, azimuth;
     double sourceRadius;
     double smoothShading;
     float position[4];
+    int showLight;
+
     double X, Y, Z;
     int lightingOn, controlMode;
-    double moveRate, radius, height;
+    double userMoveRate, radius, height;
     double emission;        // Emission intensity (%)
     double ambient;         // Ambient intensity (%)
     double diffuse;         // Diffuse intensity (%)
@@ -20,9 +23,10 @@ public:
 
     double translationChangeRate, rotationChangeRate;
 
-    LightClass(double, double);
-    void init();
+    LightClass();
+    void initialize(int);
     void update();
+    void updateAzimuthRotation(float);
     void render();
     void keyPressUpdate(unsigned char, double, double, double);
     void toggleOn();

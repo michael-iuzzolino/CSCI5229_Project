@@ -28,5 +28,5 @@ void main()
               + Is*gl_FrontLightProduct[0].specular;
 
    //  Apply texture
-   gl_FragColor = color * texture2D(tex,gl_TexCoord[0].xy);
+   gl_FragColor = color * texture2D(tex, gl_TexCoord[0].xy);
 }

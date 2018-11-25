@@ -2,15 +2,23 @@
 #include "projectManager.h"
 #include "CameraClass.h"
 
-CameraClass::CameraClass(double worldDim, double worldTranslationChangeRate, double worldRotationChangeRate)
+CameraClass::CameraClass(double worldDim)
 {
     dim = worldDim;
-    translationChangeRate = worldTranslationChangeRate;
-    rotationChangeRate = worldRotationChangeRate;
 }
 
-void CameraClass::init()
+void CameraClass::initialize()
 {
+    translationChangeRate_GOD_MODE = 10;
+    rotationChangeRate_GOD_MODE = 5;
+    translationChangeRate_FPS_MODE = 0.5;
+    rotationChangeRate_FPS_MODE = 5;
+
+    translationChangeRate = translationChangeRate_GOD_MODE;
+    rotationChangeRate = rotationChangeRate_GOD_MODE;
+
+    cameraViewMode = 1; // default at center
+
     mouseLook = 0;
     mouseMovementTimer = 0;
     mouseMovementTimerMax = 1500.0;
@@ -19,15 +27,26 @@ void CameraClass::init()
     xLookValLimit = 200;
     yLookValLimit = 200;
 
-    FPS_heightAdjustment = 0.005;
-    azimuth = 0.0;
-    elevation = 2.0;
-    X = 0.0;
-    Y = 2.0;
-    Z = 7.0;
+    FPS_heightAdjustment = 1.1;
+
+    azimuthSeparation = 45;
+    int initAzimuth = 125;
+    for (int i=0; i < 3; i++)
+    {
+        azimuths[i] = initAzimuth+azimuthSeparation*i;
+    }
+    azimuth = azimuths[cameraViewMode];
+
+    elevation = -15.0;
+    X = -58.0;
+    Y = 10.0;
+    Z = -68.0;
     lookX = 0;
     lookY = 0;
-    lookZ = -1.0;
+    lookZ = 0;
+    movementLookX = 0;
+    movementLookY = 0;
+    movementLookZ = 0;
     upX = 0;
     upY = Cos(elevation);
     upZ = 0;
@@ -36,66 +55,62 @@ void CameraClass::init()
 
     fov = 55;
     aspectRatio = 1;
-    currentMode = 0;
-    projectionMode = 1;
-    firstPersonMode = 1;
 }
 
-void CameraClass::updateLook()
+void CameraClass::updateLook(float targetAzimuth)
 {
-    lookX = Sin(azimuth) * Cos(elevation);
+    lookX = Sin(targetAzimuth) * Cos(elevation);
     lookY = Sin(elevation);
-    lookZ = -Cos(azimuth) * Cos(elevation);
-}
+    lookZ = -Cos(targetAzimuth) * Cos(elevation);
 
-
-void CameraClass::render(float terrainHeight)
-{
-    if (firstPersonMode)
+    if (bindCameraToTerrain)
     {
-        updateLook();
-
-        if (bindCameraToTerrain)
-        {
-            Y = terrainHeight + FPS_heightAdjustment;
-        }
-        gluLookAt(X, Y, Z,
-            X + lookX, Y + lookY, Z + lookZ,
-            0.0, Cos(elevation), 0.0);
-    }
-    else if (projectionMode)
-    {
-        double Ex = -2 * dim * Sin(azimuth) * Cos(elevation);
-        double Ey = +2 * dim * Sin(elevation);
-        double Ez = +2 * dim * Cos(azimuth) * Cos(elevation);
-        gluLookAt(Ex, Ey, Ez, 0, 0, 0, 0, Cos(elevation), 0);
+        movementLookX = Sin(azimuths[1]) * Cos(elevation);
+        movementLookY = Sin(azimuths[1]);
+        movementLookZ = -Cos(azimuths[1]) * Cos(elevation);
     }
     else
     {
-        glRotatef(elevation, 1, 0, 0);
-        glRotatef(azimuth, 0, 1, 0);
+        movementLookX = lookX;
+        movementLookY = lookY;
+        movementLookZ = lookZ;
     }
+}
 
+
+void CameraClass::render(int cameraNumber)
+{
+    float renderAzimuth;
+
+    renderAzimuth = (cameraNumber == -1) ? azimuths[cameraViewMode] : azimuths[cameraNumber];
+
+    updateLook(renderAzimuth);
+
+    if (bindCameraToTerrain)
+    {
+        Y = terrainHeight + FPS_heightAdjustment;
+        Y += getJumpHeight();
+    }
+    gluLookAt(X, Y, Z,
+        X + lookX, Y + lookY, Z + lookZ,
+        0.0, Cos(elevation), 0.0);
 
     updateMouseLook(lastMouseX, lastMouseY, mouseMovementTimer);
-
 }
 
 void CameraClass::toggleMode()
 {
-    currentMode++;
-    currentMode %= 3;
+    bindCameraToTerrain = 1 - bindCameraToTerrain;
 
-    if (currentMode == 0)
+    if (bindCameraToTerrain)
     {
-        firstPersonMode = 1;
-        projectionMode = 1;
-        init();
+        translationChangeRate = translationChangeRate_FPS_MODE;
+        rotationChangeRate = rotationChangeRate_FPS_MODE;
     }
     else
     {
-        firstPersonMode = 0;
-        projectionMode = (currentMode == 1) ? 1 : 0;
+        translationChangeRate = translationChangeRate_GOD_MODE;
+        rotationChangeRate = rotationChangeRate_GOD_MODE;
     }
 }
 
@@ -104,20 +119,9 @@ void CameraClass::updateProjection()
     double nearPlane, farPlane;
     glMatrixMode(GL_PROJECTION); //  Tell OpenGL we want to manipulate the projection matrix
     glLoadIdentity(); //  Undo previous transformations
-    if (firstPersonMode) {
-        nearPlane = dim / 100.0;
-        farPlane = 100.5 * dim;
-        gluPerspective(fov, aspectRatio, nearPlane, farPlane);
-    } else {
-        if (projectionMode) //  Perspective transformation
-        {
-            nearPlane = dim / 4;
-            farPlane = 4 * dim;
-            gluPerspective(fov, aspectRatio, nearPlane, farPlane);
-        } else //  Orthogonal projection
-            glOrtho(-aspectRatio * dim, +aspectRatio * dim, -dim, +dim, -dim, +dim);
-    }
-
+    nearPlane = dim / 500.0;
+    farPlane = 100 * dim;
+    gluPerspective(fov, aspectRatio, nearPlane, farPlane);
     glMatrixMode(GL_MODELVIEW); //  Switch to manipulating the model matrix
     glLoadIdentity(); //  Undo previous transformations
 }
@@ -126,6 +130,25 @@ void CameraClass::resetAspectRatio(int width, int height)
 {
     aspectRatio = (height > 0) ? (double) width / height : 1; //  Ratio of the width to the height of the window
 }
+
+void CameraClass::updateMouseLookAzimuths(float sensitivityDecay)
+{
+    for (int i=0; i < 3; i++)
+    {
+        azimuths[i] += lastMouseX*xLookSensitivity * sensitivityDecay;
+    }
+    azimuth = azimuths[cameraViewMode];
+}
+
+void CameraClass::updateAzimuths(float azimuthDelta)
+{
+    for (int i=0; i < 3; i++)
+    {
+        azimuths[i] += azimuthDelta;
+    }
+    azimuth = azimuths[cameraViewMode];
+}
+
 
 void CameraClass::updateMouseLook(int x, int y, float movementTimer)
 {
@@ -142,61 +165,49 @@ void CameraClass::updateMouseLook(int x, int y, float movementTimer)
     lastMouseX = x;
     lastMouseY = y;
     float sensitivityDecay = (mouseMovementTimerMax - movementTimer)/mouseMovementTimerMax;
-    azimuth += lastMouseX*xLookSensitivity * sensitivityDecay;
+    updateMouseLookAzimuths(sensitivityDecay);
     elevation += lastMouseY*yLookSensitivity * sensitivityDecay;
 }
 
 void CameraClass::keyPressUpdate(unsigned char key)
 {
-    if (firstPersonMode)
+    switch (key)
     {
-        if (key == 'w') // Move Forward
-        {
-            X += lookX * translationChangeRate;
-            Y += lookY * translationChangeRate;
-            Z += lookZ * translationChangeRate;
-        }
-        else if (key == 's') // Move Backwards
-        {
-            X -= lookX * translationChangeRate;
-            Y -= lookY * translationChangeRate;
-            Z -= lookZ * translationChangeRate;
-        }
-        else if (key == 'a') // Look left
-            azimuth -= rotationChangeRate;
-
-        else if (key == 'd') // Look Right
-            azimuth += rotationChangeRate;
-
-        else if (key == 'z') // Move down in Y
+        case 'w':
+            X += movementLookX * translationChangeRate;
+            Y += movementLookY * translationChangeRate;
+            Z += movementLookZ * translationChangeRate;
+            break;
+        case 's':
+            X -= movementLookX * translationChangeRate;
+            Y -= movementLookY * translationChangeRate;
+            Z -= movementLookZ * translationChangeRate;
+            break;
+        case 'a':
+            updateAzimuths(-rotationChangeRate);
+            break;
+        case 'd':
+            updateAzimuths(+rotationChangeRate);
+            break;
+        case 'z':
             Y -= translationChangeRate;
-        else if (key == 'c') // Move up in Y
+            break;
+        case 'c':
             Y += translationChangeRate;
-        else if (key == 'q') // Strafe Left
-        {
-            X += lookZ * translationChangeRate;
-            Z -= lookX * translationChangeRate;
-        }
-        else if (key == 'e') // Strafe Right
-        {
-            X -= lookZ * translationChangeRate;
-            Z += lookX * translationChangeRate;
-        }
-    }
-    else
-    {
-        if (key == 'a')
-            azimuth += rotationChangeRate;
-        else if (key == 'd')
-            azimuth -= rotationChangeRate;
-        else if (key == 'w')
-            elevation += rotationChangeRate;
-        else if (key == 's')
-            elevation -= rotationChangeRate;
-
-        elevation = elevation < 1 ? 1 : elevation; // Elevation: Restrict from going under ground
-        elevation = elevation > 90 ? 90 : elevation; // Elevation: Restrict camera from flipping upside down
-        azimuth = fmod(azimuth, 360); // Azimuth: mod to 360
+            break;
+        case 'q':
+            X += movementLookZ * translationChangeRate;
+            Z -= movementLookX * translationChangeRate;
+            break;
+        case 'e':
+            X -= movementLookZ * translationChangeRate;
+            Z += movementLookX * translationChangeRate;
+            break;
+        case 'm':
+        case 'M':
+            cameraViewMode++;
+            cameraViewMode %= 3;
+            break;
     }
 }
 
@@ -207,50 +218,50 @@ glm::vec3 CameraClass::getPosition()
 
 void CameraClass::specialKeyPressUpdate(int key)
 {
-    if (firstPersonMode)
+    if (key == GLUT_KEY_LEFT)
     {
-        if (key == GLUT_KEY_LEFT)
-            azimuth -= rotationChangeRate;
-        else if (key == GLUT_KEY_RIGHT)
-            azimuth += rotationChangeRate;
-        else if (key == GLUT_KEY_UP)
-            elevation += rotationChangeRate;
-        else if (key == GLUT_KEY_DOWN)
-            elevation -= rotationChangeRate;
+        updateAzimuths(-rotationChangeRate);
     }
-    else // Perspective or Ortho
+    else if (key == GLUT_KEY_RIGHT)
     {
-        if (key == GLUT_KEY_LEFT)
-            azimuth += rotationChangeRate;
-        else if (key == GLUT_KEY_RIGHT)
-            azimuth -= rotationChangeRate;
-        else if (key == GLUT_KEY_UP)
-            elevation += rotationChangeRate;
-        else if (key == GLUT_KEY_DOWN)
-            elevation -= rotationChangeRate;
-
-        elevation = elevation < 1 ? 1 : elevation; // Elevation: Restrict from going under ground
-        elevation = elevation > 90 ? 90 : elevation; // Elevation: Restrict camera from flipping upside down
-        azimuth = fmod(azimuth, 360); // Azimuth: mod to 360
+        updateAzimuths(+rotationChangeRate);
     }
-}
-
-void CameraClass::toggleHeightBound()
-{
-    bindCameraToTerrain = 1 - bindCameraToTerrain;
-}
-
-void CameraClass::setTerrainPosition(glm::vec3 newWorldPosition)
-{
-    worldPosition = newWorldPosition;
-}
-
-glm::vec3 CameraClass::getTerrainPosition()
-{
-    return worldPosition;
+    else if (key == GLUT_KEY_UP)
+    {
+        elevation += rotationChangeRate;
+    }
+    else if (key == GLUT_KEY_DOWN)
+    {
+        elevation -= rotationChangeRate;
+    }
 }
 
 void CameraClass::toggleMouseLook()
 {
     mouseLook = 1-mouseLook;
+}
+
+void CameraClass::setFirstPersonHeight(float newHeight)
+{
+    terrainHeight = newHeight;
+}
+
+void CameraClass::startJump()
+{
+    if (jumping) { return; }
+    jumpStartTime = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+    jumpHeight = Y;
+    jumping = true;
+}
+
+float CameraClass::getJumpHeight()
+{
+    if (!jumping) { return 0; }
+    float currentTime = glutGet(GLUT_ELAPSED_TIME)/1000.0 - jumpStartTime;
+    float currentHeight = sin(currentTime) * 10;
+    if (currentHeight < 0) {
+        jumping = false;
+        currentHeight = 0;
+    }
+    return currentHeight;
 }
