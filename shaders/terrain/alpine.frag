@@ -4,6 +4,7 @@ varying vec3 View;
 varying vec3 Light;
 varying vec3 Normal;
 varying vec3 vertexNorm;
+varying float distToCamera;
 varying float height;
 
 uniform sampler2D texture0;
@@ -12,6 +13,9 @@ uniform sampler2D texture2;
 uniform sampler2D texture3;
 uniform sampler2D texture4;
 uniform sampler2D trailMap;
+
+uniform float time;
+uniform float maxPixelDistance;
 
 void main()
 {
@@ -42,51 +46,101 @@ void main()
                    + Id * gl_FrontLightProduct[0].diffuse
                    + Is * gl_FrontLightProduct[0].specular;
 
-    vec4 textureColor = texture2D(trailMap, gl_TexCoord[5].st);
+    vec4 pixelHeight = texture2D(trailMap, gl_TexCoord[5].st);
+    vec4 pixelTextureColor;
     float trailThreshold = 0.2;
-    if (textureColor.r < trailThreshold && textureColor.g < trailThreshold && textureColor.b  < trailThreshold)
+    if (pixelHeight.r < trailThreshold && pixelHeight.g < trailThreshold && pixelHeight.b  < trailThreshold)
     {
-        gl_FragColor = matsColor * texture2D(texture4, gl_TexCoord[4].st);
+        pixelTextureColor = texture2D(texture4, gl_TexCoord[4].st);
     }
     else if (height >= 18)
     {
-        gl_FragColor = matsColor * texture2D(texture3, gl_TexCoord[3].st);
+        pixelTextureColor = texture2D(texture3, gl_TexCoord[3].st);
     }
     else if (height < 18 && height >= 15)
     {
         if (flatness <= 0.5)
         {
-            gl_FragColor = matsColor * texture2D(texture2, gl_TexCoord[2].st);
+            pixelTextureColor = texture2D(texture2, gl_TexCoord[2].st);
         }
         else
         {
-            gl_FragColor = matsColor * texture2D(texture3, gl_TexCoord[3].st);
+            pixelTextureColor = texture2D(texture3, gl_TexCoord[3].st);
         }
     }
     else if (height < 15 && height >= 6)
     {
         if (flatness >= 0.9)
         {
-            gl_FragColor = matsColor * texture2D(texture1, gl_TexCoord[1].st);
+            pixelTextureColor = texture2D(texture1, gl_TexCoord[1].st);
         }
         else
         {
-            gl_FragColor = matsColor * texture2D(texture2, gl_TexCoord[2].st);
+            pixelTextureColor = texture2D(texture2, gl_TexCoord[2].st);
         }
     }
     else if (height < 7 && height >= 3)
     {
         if (flatness >= 0.7)
         {
-            gl_FragColor = matsColor * texture2D(texture1, gl_TexCoord[1].st);
+            pixelTextureColor = texture2D(texture1, gl_TexCoord[1].st);
         }
         else
         {
-            gl_FragColor = matsColor * texture2D(texture1, gl_TexCoord[1].st);
+            pixelTextureColor = texture2D(texture1, gl_TexCoord[1].st);
         }
     }
     else
     {
-        gl_FragColor = matsColor * texture2D(texture0, gl_TexCoord[0].st);
+        pixelTextureColor = texture2D(texture0, gl_TexCoord[0].st);
+    }
+
+    if (abs(distToCamera) > maxPixelDistance)
+    {
+        discard;
+    }
+
+    gl_FragColor = matsColor * pixelTextureColor;
+
+    if (pixelTextureColor == texture2D(texture4, gl_TexCoord[4].st))
+    {
+        return;
+    }
+
+    // Animation for seasons
+    float totalTime = 10.0;
+    float currentTime = mod(time, totalTime);
+    float w1, w2;
+    vec4 snowColor = texture2D(texture3, gl_TexCoord[3].st);
+    if (currentTime < totalTime/4.0)
+    {
+
+    }
+    else if (currentTime < totalTime*2/4.0)
+    {
+
+    }
+    else if (currentTime < totalTime*3/4.0)
+    {
+        w1 = currentTime/totalTime*2;
+        w2 = 1-currentTime/totalTime*2;
+
+        float time0 = currentTime - totalTime*2/4.0;
+        float currentPixel = length(gl_TexCoord[0].st - vec2(0.5, 0.5));
+        if (currentPixel <= time0)
+        {
+            gl_FragColor = matsColor * (w1 * snowColor + w2 * pixelTextureColor);
+        }
+    }
+    else
+    {
+        w1 = 1-currentTime/totalTime;
+        w2 = currentTime/totalTime;
+        float time0 = currentTime - totalTime*3/4.0;
+        float currentPixel = length(gl_TexCoord[0].st - vec2(0.5, 0.5));
+        if (currentPixel >= time0)
+        {
+            gl_FragColor = matsColor * (w1 * snowColor * 2 + w2 * pixelTextureColor);
+        }
     }
 }

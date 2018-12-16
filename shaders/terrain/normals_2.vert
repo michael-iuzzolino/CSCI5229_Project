@@ -4,7 +4,6 @@ varying vec3 View;
 varying vec3 Light;
 varying vec3 Normal;
 varying vec3 vertexNorm;
-varying float distToCamera;
 varying float height;
 
 void main()
@@ -12,8 +11,6 @@ void main()
     //  Vertex location in modelview coordinates
     vec4 P = gl_ModelViewMatrix * gl_Vertex;
 
-    distToCamera = -P.z;
-    
     //  Light position
     Light  = gl_LightSource[0].position.xyz - P.xyz;
 

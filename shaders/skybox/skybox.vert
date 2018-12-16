@@ -1,10 +1,10 @@
+//  Identity vertex shader
 attribute vec3 inPosition;
 
-verying texCoord;
+varying vec3 texCoords;
 
 void main()
 {
-    texCoord = normalize(inPosition.xyz);
-
-    gl_Position = gl_ModelViewProjectionMatrix * vec4(inPosition, 1.0);
+    texCoords = inPosition;
+    gl_Position = gl_ModelViewProjectionMatrix * vec4(inPosition.xyz, 1.0);
 }

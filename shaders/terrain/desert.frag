@@ -6,12 +6,16 @@ varying vec3 Normal;
 varying vec3 vertexNorm;
 varying float height;
 
+varying float distToCamera;
+
 uniform sampler2D texture0;
 uniform sampler2D texture1;
 uniform sampler2D texture2;
 uniform sampler2D texture3;
 uniform sampler2D texture4;
 uniform sampler2D trailMap;
+
+uniform float maxPixelDistance;
 
 void main()
 {
@@ -88,5 +92,10 @@ void main()
     else
     {
         gl_FragColor = matsColor * texture2D(texture0, gl_TexCoord[0].st);
+    }
+    
+    if (abs(distToCamera) > maxPixelDistance)
+    {
+        discard;
     }
 }

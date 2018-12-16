@@ -3,6 +3,9 @@ const float pi = 3.14159;
 uniform float time;
 
 varying float LightIntensity;
+varying vec3 Position;
+varying vec3 Normal;
+
 
 // https://jayconrod.com/posts/34/water-simulation-in-glsl
 
@@ -59,6 +62,9 @@ void main()
     vec4 pos = gl_Vertex;
 
     pos.y = 1.0 + waveHeight(pos.x, pos.z);
+
+    Normal = normalize(inverse(gl_NormalMatrix) * gl_Normal);
+    Position = vec3(gl_ModelViewMatrix * gl_Vertex);
 
     //  Set vertex coordinates
     gl_Position = gl_ModelViewProjectionMatrix * pos;
