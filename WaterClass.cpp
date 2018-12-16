@@ -6,6 +6,10 @@ WaterClass::WaterClass() {
     wavesOn = 1;
     currentShaderID = 0;
     currentTextureID = 0;
+
+    reflectionON = true;
+    showNormals = false;
+    showWater = true;
 }
 
 void WaterClass::initialize() {}
@@ -30,6 +34,12 @@ void WaterClass::setShaders()
     GLuint texNumUniformID = glGetUniformLocation(shaderID, "textureNum");
     glUniform1i(texNumUniformID, currentTextureID);
 
+    GLuint waterReflectionID = glGetUniformLocation(shaderID, "reflectionON");
+    glUniform1i(waterReflectionID, reflectionON);
+
+    GLuint worldRotationRateID = glGetUniformLocation(shaderID, "worldRotationRate");
+    glUniform1f(worldRotationRateID, worldRotationRate);
+
     GLuint textureUniformID_0 = glGetUniformLocation(shaderID, "texture0");
     GLuint textureUniformID_1 = glGetUniformLocation(shaderID, "texture1");
 
@@ -41,6 +51,10 @@ void WaterClass::setShaders()
 
     glUniform1i(textureUniformID_0, 0);
     glUniform1i(textureUniformID_1, 1);
+
+    // Setup skybox for reflections
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
 }
 
 void WaterClass::setTextures()
@@ -86,58 +100,61 @@ void WaterClass::renderNormals() {}
 
 void WaterClass::render()
 {
+    if (!showWater)
+    {
+        return;
+    }
     int spatialScale = 512;
 
-    glPushMatrix();
     setTextures();
     setMaterials();
     setShaders();
-    glTranslatef(0, waterHeight, 0);
-    glScalef(spatialScale, 1, spatialScale);
+    glPushMatrix();
+        glTranslatef(0, waterHeight, 0);
+        glScalef(spatialScale, 1, spatialScale);
 
-    glColor3f(0.75,0.75,0.75);
-    glBegin(GL_QUADS);
-    glm::vec3 v1(+1, 0, +1);
-    glm::vec3 v2(+1, 0, -1);
-    glm::vec3 v3(-1, 0, -1);
-    glm::vec3 v4(-1, 0, +1);
-    glm::vec3 normal = glm::normalize(glm::cross(v2-v1, v4-v1));
-    glNormal3f(normal.x, normal.y, normal.z);
-    float waterTextureRepeats = 100.0;
+        glColor3f(0.75,0.75,0.75);
+        glBegin(GL_QUADS);
+        glm::vec3 v1(+1, 0, +1);
+        glm::vec3 v2(+1, 0, -1);
+        glm::vec3 v3(-1, 0, -1);
+        glm::vec3 v4(-1, 0, +1);
+        glm::vec3 normal = glm::normalize(glm::cross(v2-v1, v4-v1));
+        glNormal3f(normal.x, normal.y, normal.z);
+        float waterTextureRepeats = 100.0;
 
-    // Vertex 1
-    for (int i=0; i < (int)textureFiles.size(); i++)
-    {
-        glMultiTexCoord2f(GL_TEXTURE0 + i, 0.0, 0.0);
-    }
-    glVertex3f(v1.x, v1.y, v1.z);
+        // Vertex 1
+        for (int i=0; i < (int)textureFiles.size(); i++)
+        {
+            glMultiTexCoord2f(GL_TEXTURE0 + i, 0.0, 0.0);
+        }
+        glVertex3f(v1.x, v1.y, v1.z);
 
-    // Vertex 2
-    for (int i=0; i < (int)textureFiles.size(); i++)
-    {
-        glMultiTexCoord2f(GL_TEXTURE0 + i, 0.0, waterTextureRepeats);
-    }
-    glVertex3f(v2.x, v2.y, v2.z);
+        // Vertex 2
+        for (int i=0; i < (int)textureFiles.size(); i++)
+        {
+            glMultiTexCoord2f(GL_TEXTURE0 + i, 0.0, waterTextureRepeats);
+        }
+        glVertex3f(v2.x, v2.y, v2.z);
 
-    // Vertex 3
-    for (int i=0; i < (int)textureFiles.size(); i++)
-    {
-        glMultiTexCoord2f(GL_TEXTURE0 + i, waterTextureRepeats, waterTextureRepeats);
-    }
-    glVertex3f(v3.x, v3.y, v3.z);
+        // Vertex 3
+        for (int i=0; i < (int)textureFiles.size(); i++)
+        {
+            glMultiTexCoord2f(GL_TEXTURE0 + i, waterTextureRepeats, waterTextureRepeats);
+        }
+        glVertex3f(v3.x, v3.y, v3.z);
 
-    // Vertex 4
-    for (int i=0; i < (int)textureFiles.size(); i++)
-    {
-        glMultiTexCoord2f(GL_TEXTURE0 + i, waterTextureRepeats, 0.0);
-    }
-    glVertex3f(v4.x, v4.y, v4.z);
+        // Vertex 4
+        for (int i=0; i < (int)textureFiles.size(); i++)
+        {
+            glMultiTexCoord2f(GL_TEXTURE0 + i, waterTextureRepeats, 0.0);
+        }
+        glVertex3f(v4.x, v4.y, v4.z);
 
-    glEnd();
+        glEnd();
     glPopMatrix();
     cleanUpRender();
 }
-
 
 string WaterClass::getShaderText()
 {
@@ -151,5 +168,25 @@ void WaterClass::toggleShader()
 
 void WaterClass::toggleShowNormals()
 {
-    showNormals = 1-showNormals;
+    showNormals = !showNormals;
+}
+
+void WaterClass::toggleShow()
+{
+    showWater = !showWater;
+}
+
+void WaterClass::setSkyboxTextureID(GLuint textureID)
+{
+    skyboxTextureID = textureID;
+}
+
+void WaterClass::setSkyboxRotationRate(float rotationRate)
+{
+    worldRotationRate = rotationRate;
+}
+
+void WaterClass::toggleWaterReflection()
+{
+    reflectionON = !reflectionON;
 }

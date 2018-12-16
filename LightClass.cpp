@@ -9,7 +9,6 @@ void LightClass::initialize(int fixed)
     translationChangeRate = 1;
     rotationChangeRate = 5;
     fixedToSkybox = fixed;
-    showLight = 1;
     if (fixedToSkybox)
     {
         sourceRadius = 5;
@@ -24,9 +23,9 @@ void LightClass::initialize(int fixed)
         height = 15;
     }
 
-    smoothShading = 1;
-    lightingOn = 1;
-    controlMode = 0;
+    smoothShading = true;
+    lightingOn = true;
+    userControlMode = false;
     userMoveRate = 5;
 
     emission = 0;
@@ -51,7 +50,7 @@ void LightClass::update()
     //  Flat or smooth shading
     glShadeModel(smoothShading ? GL_SMOOTH : GL_FLAT);
 
-    if (controlMode)
+    if (userControlMode)
     {
         position[0] = X;
         position[1] = Y;
@@ -112,7 +111,7 @@ void LightClass::render()
 
 void LightClass::keyPressUpdate(unsigned char key, double lookX, double lookY, double lookZ)
 {
-    if (!controlMode)
+    if (!userControlMode)
     {
         return;
     }
@@ -146,13 +145,13 @@ void LightClass::keyPressUpdate(unsigned char key, double lookX, double lookY, d
 
 void LightClass::toggleOn()
 {
-    lightingOn = 1 - lightingOn;
+    lightingOn = !lightingOn;
 }
 
 void LightClass::toggleControl()
 {
-    controlMode = 1 - controlMode;
-    // showLight = controlMode;
+    userControlMode = !userControlMode;
+    showLight = userControlMode;
 }
 
 void LightClass::disable()

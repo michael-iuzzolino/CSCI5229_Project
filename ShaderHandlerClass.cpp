@@ -25,41 +25,44 @@ string ShaderHandlerClass::readText(string filename)
 
 int ShaderHandlerClass::createShader(GLenum type, string file)
 {
-   //  Create the shader
-   int shaderID = glCreateShader(type);
-   string source = readText(file);
-   //  Load source code from file
-   const char *c_str = source.c_str(); //https://stackoverflow.com/questions/6047527/how-to-pass-an-stdstring-to-glshadersource
-   glShaderSource(shaderID, 1, &c_str, NULL);
-   //  Compile the shader
-   cout << "Compile: " << file << endl;
-   glCompileShader(shaderID);
+    // Function derived from code by Willem A. (Vlakkies) Schreüder
+    //  Create the shader
+    int shaderID = glCreateShader(type);
+    string source = readText(file);
+    //  Load source code from file
+    const char *c_str = source.c_str();
+    glShaderSource(shaderID, 1, &c_str, NULL);
+    //  Compile the shader
+    cout << "Compile: " << file << endl;
+    glCompileShader(shaderID);
 
-   //  Return name
-   return shaderID;
+    //  Return name
+    return shaderID;
 }
 
 int ShaderHandlerClass::createShaderProg(string vertFile, string fragFile)
 {
-   //  Create program
-   int prog = glCreateProgram();
-   //  Create and compile vertex shader
-   int vert = createShader(GL_VERTEX_SHADER, vertFile);
-   //  Create and compile fragment shader
-   int frag = createShader(GL_FRAGMENT_SHADER, fragFile);
-   //  Attach vertex shader
-   glAttachShader(prog, vert);
-   //  Attach fragment shader
-   glAttachShader(prog, frag);
-   //  Link program
-   glLinkProgram(prog);
-   //  Check for errors
+    // Function derived from code by Willem A. (Vlakkies) Schreüder
+    //  Create program
+    int prog = glCreateProgram();
+    //  Create and compile vertex shader
+    int vert = createShader(GL_VERTEX_SHADER, vertFile);
+    //  Create and compile fragment shader
+    int frag = createShader(GL_FRAGMENT_SHADER, fragFile);
+    //  Attach vertex shader
+    glAttachShader(prog, vert);
+    //  Attach fragment shader
+    glAttachShader(prog, frag);
+    //  Link program
+    glLinkProgram(prog);
+    //  Check for errors
 
-   return prog;
+    return prog;
 }
 
 void ShaderHandlerClass::setShaders(vector<string> shaderFiles, vector<GLuint>& shaderProgramIDs)
 {
+    // Function derived from code by Willem A. (Vlakkies) Schreüder
     int shaderID;
     string vertexShader, fragmentShader;
 

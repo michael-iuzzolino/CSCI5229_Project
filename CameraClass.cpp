@@ -14,8 +14,8 @@ void CameraClass::initialize()
     translationChangeRate_FPS_MODE = 0.5;
     rotationChangeRate_FPS_MODE = 5;
 
-    translationChangeRate = translationChangeRate_GOD_MODE;
-    rotationChangeRate = rotationChangeRate_GOD_MODE;
+    translationChangeRate = translationChangeRate_FPS_MODE;
+    rotationChangeRate = rotationChangeRate_FPS_MODE;
 
     cameraViewMode = 1; // default at center
 
@@ -30,17 +30,20 @@ void CameraClass::initialize()
     FPS_heightAdjustment = 1.1;
 
     azimuthSeparation = 45;
-    int initAzimuth = 125;
+
+    int initAzimuth = -2;
+    float initElevation = -5.0;
+
     for (int i=0; i < 3; i++)
     {
         azimuths[i] = initAzimuth+azimuthSeparation*i;
     }
     azimuth = azimuths[cameraViewMode];
+    elevation = initElevation;
 
-    elevation = -15.0;
-    X = -58.0;
-    Y = 10.0;
-    Z = -68.0;
+    X = -101.66;
+    Y = 1.5;
+    Z = -40.3;
     lookX = 0;
     lookY = 0;
     lookZ = 0;
@@ -51,7 +54,7 @@ void CameraClass::initialize()
     upY = Cos(elevation);
     upZ = 0;
 
-    bindCameraToTerrain = 0;
+    bindCameraToTerrain = true;
 
     fov = 55;
     aspectRatio = 1;
@@ -77,7 +80,6 @@ void CameraClass::updateLook(float targetAzimuth)
     }
 }
 
-
 void CameraClass::render(int cameraNumber)
 {
     float renderAzimuth;
@@ -100,7 +102,7 @@ void CameraClass::render(int cameraNumber)
 
 void CameraClass::toggleMode()
 {
-    bindCameraToTerrain = 1 - bindCameraToTerrain;
+    bindCameraToTerrain = !bindCameraToTerrain;
 
     if (bindCameraToTerrain)
     {
@@ -120,7 +122,7 @@ void CameraClass::updateProjection()
     glMatrixMode(GL_PROJECTION); //  Tell OpenGL we want to manipulate the projection matrix
     glLoadIdentity(); //  Undo previous transformations
     nearPlane = dim / 500.0;
-    farPlane = 100 * dim;
+    farPlane = 200 * dim;
     gluPerspective(fov, aspectRatio, nearPlane, farPlane);
     glMatrixMode(GL_MODELVIEW); //  Switch to manipulating the model matrix
     glLoadIdentity(); //  Undo previous transformations
@@ -148,7 +150,6 @@ void CameraClass::updateAzimuths(float azimuthDelta)
     }
     azimuth = azimuths[cameraViewMode];
 }
-
 
 void CameraClass::updateMouseLook(int x, int y, float movementTimer)
 {
@@ -203,10 +204,15 @@ void CameraClass::keyPressUpdate(unsigned char key)
             X -= movementLookZ * translationChangeRate;
             Z += movementLookX * translationChangeRate;
             break;
-        case 'm':
         case 'M':
             cameraViewMode++;
             cameraViewMode %= 3;
+            break;
+        case '-':
+            fov -= 1;
+            break;
+        case '=':
+            fov += 1;
             break;
     }
 }
@@ -264,4 +270,9 @@ float CameraClass::getJumpHeight()
         currentHeight = 0;
     }
     return currentHeight;
+}
+
+float CameraClass::getFOV()
+{
+    return fov;
 }

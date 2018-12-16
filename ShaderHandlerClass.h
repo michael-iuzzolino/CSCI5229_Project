@@ -3,16 +3,6 @@
 #define _ShaderHandlerClass_H
 #include "projectManager.h"
 
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <map>
-#include <iterator>
-
-using namespace std;
-
 class ShaderHandlerClass
 {
 public:

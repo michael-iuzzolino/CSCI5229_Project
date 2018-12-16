@@ -39,16 +39,15 @@ void TextureHandlerClass::printLookup()
     }
 }
 
-GLuint TextureHandlerClass::loadCubeMapTexture(vector<string> filenames)
+void TextureHandlerClass::loadCubeMapTexture(vector<string> faces, GLuint& textureID)
 {
-    unsigned int textureID;
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
     int width, height, nrChannels;
-    for (unsigned int i = 0; i < filenames.size(); i++)
+    for (unsigned int i = 0; i < faces.size(); i++)
     {
-        unsigned char *data = stbi_load(filenames[i].c_str(), &width, &height, &nrChannels, 0);
+        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data)
         {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -56,7 +55,7 @@ GLuint TextureHandlerClass::loadCubeMapTexture(vector<string> filenames)
         }
         else
         {
-            std::cout << "Cubemap texture failed to load at path: " << filenames[i] << std::endl;
+            cout << "Cubemap texture failed to load at path: " << faces[i] << endl;
             stbi_image_free(data);
         }
     }
@@ -66,7 +65,6 @@ GLuint TextureHandlerClass::loadCubeMapTexture(vector<string> filenames)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    return textureID;
 }
 
 GLuint TextureHandlerClass::loadTextureFromFile(string filename, string imgType, bool flipImage)

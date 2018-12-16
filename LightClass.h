@@ -4,24 +4,7 @@
 class LightClass
 {
 public:
-    int fixedToSkybox;
-    double initAzimuth, azimuth;
-    double sourceRadius;
-    double smoothShading;
     float position[4];
-    int showLight;
-
-    double X, Y, Z;
-    int lightingOn, controlMode;
-    double userMoveRate, radius, height;
-    double emission;        // Emission intensity (%)
-    double ambient;         // Ambient intensity (%)
-    double diffuse;         // Diffuse intensity (%)
-    double specular;        // Specular intensity (%)
-    double shininess;       // Shininess (power of two)
-    double shiny;           // Shininess (value)
-
-    double translationChangeRate, rotationChangeRate;
 
     LightClass();
     void initialize(int);
@@ -32,5 +15,19 @@ public:
     void toggleOn();
     void toggleControl();
     void disable();
+private:
+    int fixedToSkybox;
+    double initAzimuth, azimuth;
+    double sourceRadius;
+    bool showLight, smoothShading, lightingOn, userControlMode;
+    double X, Y, Z;
+    double userMoveRate, radius, height;
+    double emission;        // Emission intensity (%)
+    double ambient;         // Ambient intensity (%)
+    double diffuse;         // Diffuse intensity (%)
+    double specular;        // Specular intensity (%)
+    double shininess;       // Shininess (power of two)
+    double shiny;           // Shininess (value)
+    double translationChangeRate, rotationChangeRate;
 };
 #endif

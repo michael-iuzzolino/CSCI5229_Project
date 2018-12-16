@@ -3,20 +3,6 @@
 #define _WaterClass_H
 #include "projectManager.h"
 
-#include "glm/vec3.hpp"
-#include "glm/vec4.hpp"
-#include "glm/mat4x4.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-
-#include <string>
-#include <fstream>
-#include <istream>
-#include <iostream>
-#include <sstream>
-#include <vector>
-
-using namespace std;
-
 class WaterClass
 {
 public:
@@ -25,7 +11,14 @@ public:
     int wavesOn;
     int currentShaderID;
     int currentTextureID;
-    int showNormals;
+
+    GLuint skyboxTextureID;
+
+    bool showNormals;
+    bool showWater;
+    bool reflectionON;
+
+    float worldRotationRate;
 
     vector<string> shaderFiles = {
         "water/waves.vert", "water/waves.frag"
@@ -44,6 +37,10 @@ public:
     string getShaderText();
     void toggleShader();
     void toggleShowNormals();
+    void toggleShow();
+    void toggleWaterReflection();
+    void setSkyboxTextureID(GLuint);
+    void setSkyboxRotationRate(float);
 
 private:
     void cleanUpRender();

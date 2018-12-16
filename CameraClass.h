@@ -2,11 +2,6 @@
 #ifndef CameraClass_H
 #define CameraClass_H
 
-#include "glm/vec3.hpp"
-#include "glm/vec4.hpp"
-#include "glm/mat4x4.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-
 class CameraClass
 {
 public:
@@ -26,7 +21,7 @@ public:
     glm::vec3 azimuths;
     float azimuthSeparation;
     int currentMode;
-    int bindCameraToTerrain;
+    bool bindCameraToTerrain;
     int fov; //  Field of view (for perspective)
     double aspectRatio; //  Aspect ratio
     double dim;
@@ -58,7 +53,7 @@ public:
     double queryTerrain(double, double);
     glm::vec3 getPosition();
     void toggleMouseLook();
-
+    float getFOV();
     void startJump();
 private:
     void updateMouseLookAzimuths(float);

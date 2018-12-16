@@ -3,52 +3,37 @@
 #define _SkyboxClass_H
 #include "projectManager.h"
 
-#include "glm/vec3.hpp"
-#include "glm/vec4.hpp"
-#include "glm/mat4x4.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <vector>
-
-using namespace std;
-
 class SkyboxClass
 {
 public:
-
-    float worldDimension;
-    float skyBoxAzimuth;
     vector<string> textureFiles = {
-        "skybox/01/front.bmp",  "RGB",
-        "skybox/01/left.bmp",   "RGB",
-        "skybox/01/back.bmp",   "RGB",
-        "skybox/01/right.bmp",  "RGB",
-        "skybox/01/top.bmp",    "RGB",
-        "skybox/01/bottom.bmp", "RGB"
+        "textures/skybox/01/left.tga",
+        "textures/skybox/01/right.tga",
+        "textures/skybox/01/bottom.tga",
+        "textures/skybox/01/top.tga",
+        "textures/skybox/01/front.tga",
+        "textures/skybox/01/back.tga"
     };
-
-    vector<GLuint> textureIDs;
-    GLuint skyboxTextureID;
+    GLuint cubemapTextureID;
 
     vector<string> shaderFiles = {
         "skybox/skybox.vert", "skybox/skybox.frag"
     };
     vector<GLuint> shaderProgramIDs;
 
-    int skyboxIDX;
-
     SkyboxClass(float);
     void render();
     void updateAzimuthRotation(float);
-    void setTextureID(GLuint);
+    void toggleShow();
 
+    void initCubeMap();
+    GLuint getCubemapTexture();
+    float getSkyboxAzimuth();
 private:
-    void renderSide(GLuint, float, float, float, float, float, float);
-    void clampTexture();
+    bool show;
+    float worldDimension;
+    float skyBoxAzimuth;
+    GLuint skyboxVAO, skyboxVBO;
     void renderVAOApproach();
 };
 #endif

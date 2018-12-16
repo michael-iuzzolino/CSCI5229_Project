@@ -3,18 +3,6 @@
 #define _TextureHandlerClass_H
 #include "projectManager.h"
 
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <map>
-#include <iterator>
-
-#include "stb_image.h"
-
-using namespace std;
-
 class TextureHandlerClass
 {
 public:
@@ -24,7 +12,7 @@ public:
     TextureHandlerClass();
     void setTextures(vector<string>, vector<GLuint>&, bool flipImage=true);
     void printLookup();
-    GLuint loadCubeMapTexture(vector<string>);
+    void loadCubeMapTexture(vector<string>, GLuint&);
 private:
     GLuint loadTextureFromFile(string, string, bool);
 };

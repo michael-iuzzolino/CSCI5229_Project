@@ -1,7 +1,7 @@
-# main
-EXE=main
+# final
+EXE=final
 
-# Main target
+# final target
 all: $(EXE)
 
 #  MinGW
@@ -24,28 +24,31 @@ CLEAN=rm -f $(EXE) *.o *.a
 endif
 
 # Dependencies
-main.o: main.cpp projectManager.h CameraClass.h LightClass.h WaterClass.h TerrainClass.h ShaderHandlerClass.h SkyboxClass.h TextureHandlerClass.h glm/glm.hpp
+final.o: final.cpp projectManager.h CameraClass.h LightClass.h WaterClass.h TerrainClass.h ShaderHandlerClass.h SkyboxClass.h TextureHandlerClass.h
 CameraClass.o: CameraClass.cpp CameraClass.h
 LightClass.o: LightClass.cpp LightClass.h
 TerrainClass.o: TerrainClass.cpp TerrainClass.h
+TreeClass.o: TreeClass.cpp TreeClass.h
+CactiClass.o: CactiClass.cpp CactiClass.h
 WaterClass.o: WaterClass.cpp WaterClass.h
 stb_image.o: stb_image.cpp stb_image.h
-stb_image.o: stb_image_write.cpp stb_image_write.h
+stb_image_write.o: stb_image_write.cpp stb_image_write.h
 TextureHandlerClass.o: TextureHandlerClass.cpp TextureHandlerClass.h
 ShaderHandlerClass.o: ShaderHandlerClass.cpp ShaderHandlerClass.h
 SkyboxClass.o: SkyboxClass.cpp SkyboxClass.h
 fatal.o: fatal.cpp projectManager.h
 
 # Create archive
-projectManager.a: fatal.o stb_image.o stb_image_write.o WaterClass.o ShaderHandlerClass.o SkyboxClass.o CameraClass.o LightClass.o TerrainClass.o TextureHandlerClass.o
+projectManager.a: fatal.o stb_image.o stb_image_write.o TreeClass.o CactiClass.o WaterClass.o ShaderHandlerClass.o SkyboxClass.o CameraClass.o LightClass.o TerrainClass.o TextureHandlerClass.o
 	ar -rcs $@ $^
+
 # Compile rules
 .cpp.o:
 	g++ -c -Wno-narrowing $(CFLG)  $<
 
 #  Link
-main:main.o projectManager.a
-	g++ -O3 -o $@ $^   $(LIBS) -lstdc++
+final:final.o projectManager.a
+	g++ -O3 -o $@  $^  $(LIBS)  -lstdc++
 
 #  Clean
 clean:

@@ -3,22 +3,8 @@
 #define _TerrainClass_H
 #include "projectManager.h"
 
-#include "glm/vec3.hpp"
-#include "glm/vec4.hpp"
-#include "glm/mat4x4.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-
-#include "stb_image.h"
-
-#include <string>
-#include <fstream>
-#include <istream>
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <map>
-
-using namespace std;
+#include "TreeClass.h"
+#include "CactiClass.h"
 
 class TerrainClass
 {
@@ -27,14 +13,19 @@ public:
     vector<vector<float>> trailsMapMesh;
 
     vector<vector<glm::vec3>> normalMap;
-    int numRows, numCols, numVertices;
+    int numVertices;
     float cx, cz;
     int currentShaderID;
     int numBiomeTextures;
 
+    float camX, camZ;
+
     int heightmapWidth, heightmapHeight, heightmapSize;
 
     GLuint heightMapTextureID;
+
+    mt19937 randomNumberGenerator;
+    bool PerlinModeON;
 
     // Flags
     // -------------------
@@ -54,22 +45,59 @@ public:
     int minGrassAltitude;
     float grassSeparation;
 
-    float grassWindRotation;
+    float windRotation;
+
+    siv::PerlinNoise perlin;
 
     // HEIGHTMAP
     // ---------------------------------------------------
-    string heightMapFile = "heightmap/heightmap_02.dat";
+    int heightMapIDX;
+    string currentHeightMapFile;
+    vector<string> heightMaps = {"heightmap/heightmap_02.dat", "heightmap/heightmap_01.dat", "heightmap/heightmap_03.dat", "heightmap/heightmap_04.dat"};
+    // ---------------------------------------------------
+
+    // TREES
+    // ---------------------------------------------------
+    TreeClass trees;
+    vector<GLuint> treeTextureIDs;
+    vector<string> treeTextureFiles = {
+        "trees/bark.bmp",   "RGB",
+        "trees/leaf1.bmp",  "RGB",
+        "trees/leaf2.bmp",  "RGB",
+        "trees/leaf3.bmp",  "RGB"
+    };
+
+    vector<string> treeShaderFiles = {
+        "trees/leaves.vert", "trees/leaves.frag"
+    };
+    vector<GLuint> treeShaderProgramIDs;
+    // ---------------------------------------------------
+
+    // CACTI
+    // ---------------------------------------------------
+    CactiClass cacti;
+    vector<GLuint> cactiTextureIDs;
+    vector<string> cactiTextureFiles = {
+        "cacti/cacti.bmp",   "RGB"
+    };
+
+    vector<string> cactiShaderFiles = {
+        "cacti/cacti.vert", "cacti/cacti.frag"
+    };
+    vector<GLuint> cactiShaderProgramIDs;
     // ---------------------------------------------------
 
     // BIOMES
     // ---------------------------------------------------
     string selectedBiome;
     int biomeIDX;
-    vector<string> biomeNames = {"desert", "alpine"};
+    vector<string> biomeNames = {"alpine", "desert"};
 
     vector<string> selectedBiomeTextureFiles;
     vector<GLuint> selectedBiomeTextureIDs_backup;
     vector<GLuint> selectedBiomeTextureIDs;
+    vector<string> selectedBiomeVegetationTextureFiles;
+    vector<GLuint> selectedBiomeVegetationTextureIDs;
     vector<string> selectedBiomeShaderFiles;
     vector<GLuint> selectedBiomeShaderIDs;
 
@@ -81,9 +109,18 @@ public:
         "terrain/alpine/trail.bmp", "RGB"
     };
 
+    vector<string> alpineVegetationTextureFiles = {
+        "billboards/grass/grass_01.bmp", "RGB",
+        "billboards/grass/grass_02.bmp", "RGB",
+        "billboards/grass/grass_03.bmp", "RGB",
+        "billboards/grass/grass_04.bmp", "RGB",
+        "billboards/grass/grass_05.bmp", "RGBA"
+    };
+
     vector<string> alpineShaders = {
         "terrain/alpine.vert",  "terrain/alpine.frag",
-        "terrain/normals.vert", "terrain/normals.frag"
+        "terrain/normals.vert", "terrain/normals.frag",
+        "terrain/normals_2.vert", "terrain/normals_2.frag"
     };
 
     vector<GLuint> alpineShaderIDs;
@@ -96,9 +133,18 @@ public:
         "terrain/desert/white_sand.bmp",     "RGB"
     };
 
+    vector<string> desertVegetationTextureFiles = {
+        "billboards/desert/plant_04.bmp", "RGB",
+        "billboards/desert/plant_04.bmp", "RGB",
+        "billboards/desert/plant_04.bmp", "RGB",
+        "billboards/desert/plant_03.bmp", "RGB",
+        "billboards/desert/plant_04.bmp", "RGB",
+    };
+
     vector<string> desertShaders = {
         "terrain/desert.vert",  "terrain/desert.frag",
-        "terrain/normals.vert", "terrain/normals.frag"
+        "terrain/normals.vert", "terrain/normals.frag",
+        "terrain/normals_2.vert", "terrain/normals_2.frag"
     };
 
     vector<GLuint> desertShaderIDs;
@@ -120,19 +166,7 @@ public:
         "terrain/grass.vert", "terrain/grass.frag"
     };
     vector<GLuint> grassShaderProgramIDs;
-
-    vector<string> grassBillboardFiles = {
-        "billboards/grass/grass_01.bmp", "RGB",
-        "billboards/grass/grass_02.bmp", "RGB",
-        "billboards/grass/grass_03.bmp", "RGB",
-        "billboards/grass/grass_04.bmp", "RGB",
-        "billboards/grass/grass_05.bmp", "RGBA"
-    };
-    vector<GLuint> grassBillboardIDs;
-    GLuint grassTextureID;
     // ---------------------------------------------------
-
-
 
     glm::vec3 cameraPosition;
 
@@ -145,10 +179,12 @@ public:
     void readHeightMapFile();
     void render();
     void calculateNormals();
-    void renderGrass();
+    void renderVegetation();
     void renderSolidTerrain();
+    void renderTreesOrCacti(int, int);
     void updateWind(double);
     void toggleShader();
+    void generateNewHeightMap();
 
     void renderMeshWire();
     void toggleMeshWire();
@@ -160,14 +196,28 @@ public:
     void toggleBiome();
     void toggleVegetation();
     void toggleTextureColoring();
+    void setBiomeTextures();
+    void setBiomeShaders();
+    void toggleHeightMap();
+    void lowerHeight();
+    void raiseHeight();
+    void increaseRenderDistance();
+    void decreaseRenderDistance();
+    void updatePerlinMap();
 private:
+    float maxPixelDistance;
+    float minTreeAltitude, maxTreeAltitude;
+    int PerlinRows, PerlinCols;
+    float deltaHeight;
+    void initPerlinMap();
+    float readHeightMap(int, int);
     void cleanUpRender();
     void readTrailsFile();
     void setShaders();
     void setMaterials(string);
     void setTextures();
     void loadTrails();
-    void renderGrassPatch(int, int);
+    void renderGrass(int, int, float);
     void renderGrassBlade(int, int, glm::vec3, float);
     void renderNormals();
     template <class T>

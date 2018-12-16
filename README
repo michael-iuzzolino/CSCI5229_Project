@@ -3,8 +3,64 @@ Project
 Michael L. Iuzzolino
 CSCI4229/5229 Fall 2018
 
-Key Bindings
-============
+(I) Summary / How to Operate
+============================
+This application will form the foundation for explorations in virtual-to-real-world transfer learning for tasks such as trail recognition and navigation.
+
+For now, there are 2 modes of operation: 1) First Person (free roam), 2) 'God' mode, both of which are free control, but in the former, you are bound to the terrain.
+A third mode will eventually be introduced that is First Person (constrained). In this mode, the camera will be restricted to the trails for the purpose of collecting images
+for use in training trail recognition and navigation models (e.g., Convolutional Neural Networks).
+
+To control the camera in the available modes, you may use the WASD + arrow keys. The 'q' and 'e' keys strafe left/right, and, when in 'God' mode, the 'z' and 'c' keys decrease/increase elevation.
+In addition, you can left-click within the window to enable/disable mouse-controlled looking. There are 3 cameras attached to your control.
+Pressing shift+m (or 'M') allows you to cycle through them within the primary viewport. Pressing the number '0' expands the viewport
+to include all three cameras' perspectives simultaneously. When the third mode is introduced, data will be captured from all 3 cameras, with the orientation of the camera serving
+as the label to the data (e.g., in the left-facing camera, the trail will be located within the right-side portion of the captured image). Consequently, to generate appropriately labeled data, the FOV
+for the cameras must be adequately large, such that the trail can be seen within all three cameras. Pressing '-' or '=' will decrease/increase the cameras' FOVs.
+
+To capture a single image, press '1'. To being automatic screen capture, press 'y'; the images are saved as BMPs to the data_collection directory located within the main project folder.
+A red circle will pulsate in the top-left of the screen indicating record mode is active.
+
+There are currently 2 biomes available: 1) Alpine and 2) Desert. Press 'b' to cycle between them. Press shift+b (or 'B') to toggle the render quality. In one mode, the full textures will apply to the terrain; in another,
+only the base texture color will be used. Press shift+s (or 'S') to cycle between the biomes' shaders. For either biome, the first shader is a basic texture/lighting shader that uses Phong lighting and determines
+the texture to apply based on height. The next two shaders map the vertex normal components to RGB coloring, which is useful for debugging the results of vertex normal calculations. Additionally, the vertex normals
+may be visualized by pressing 'n'. The terrain can be turned on/off with 't', and shift+t (or 'T') toggles the terrain meshwire.
+
+Each biome is mapped to various heightmaps. There are 2 categories: 1) Pre-generated heightmaps, 2) Randomly Generator.
+There are 4 available pre-generated heightmaps, which may be cycled between by pressing shift+h (or H), and are 256x256.
+The randomly generated heightmaps are 512x512 and use a 2d Perlin Noise generator. To generate a new map press shift+p (or 'P').
+Press shift+h to return to pre-generated maps if you've entered into random heightmaps and wish to return to the pre-generated ones.
+
+Press '[' or ']' to decrease/increase the render distance. To view these effects, enter 'God' mode and go above the map with the meshwire enabled. This operates at the shader as a function of the camera and pixel locations.
+
+Water: Two water shaders are available to both biomes; press shift+w (or W) to cycle between them. A simple wave function is applied within the water shaders to yield the effect of a tide on the shorelines.
+By default, water reflection is active. Press 'm' to toggle reflection on/off.
+
+Skybox: The skybox rotates to give the illusion of a dynamic sky. Press 'r' to toggle the rotation on/off. Press shift+r (or 'R') to cycle through the rotation rates. Press shift+n (or 'N') to toggle the skybox on/off.
+By default, the light source is setup to roughly map to the sun in the skybox and the light source's sphere is not visible. Press shift+k (or 'K') to toggle control of the lightsource; when in control, the sphere is rendered.
+To control the light source's location, used the IJKL keys (as you would the wasd keys). The 'u' and 'o' keys decrease/increase the height. The skybox is created as a cubemap, which enables the sky to be reflected in the water.
+
+Seasons are simulated in the trees using a shader to mix different textures. Additionally, the trees lose and regain leaves by removing pixels
+as a function of time elapsed within a given season (fall / spring) and the pixel's (s,t) location within the texture. For the trees, wind effects are simulated
+both in the shader and by the immediate-mode rotation transforms. Wind effects for the vegetation happen by immediate-mode rotation transforms, but may be moved
+to the shader soon.
+
+Press 'Esc' to quit the program.
+
+(II) Future Work
+================
+The program will still crash despite some minimal optimizations. I plan to spend more time after the semester tracking down the bug in a more rigorous manner.
+There are many types of optimizations I would like to implement; primarily, I'd like to switch out of immediate mode and load everything using VAOs/FBOs. This may resolve the above issue.
+I didn't have time to explore randomly generated vegetation density maps, so I would to explore this especially now that I have a better understanding of Perlin noise.
+In conjunction with this new understanding of Perlin noise, I would like to expand the domain of the environment such that new terrain and trails are procedurally generated within a radius R from the camera.
+Lastly, I am planning to implement shadow maps (I didn't have time to do it this round), day-night cycles, post-processing effects such as rain/snow, as well as providing an interactive user interface.
+
+Overall, I spent at least 80 hours on this project, if not significantly more. It was highly enjoyable and addicting, and I very much look forward to using what I've learned in this class to ground my future studying of computer graphics.
+
+Thank you for the course and for all of your help!
+
+(III) Key Bindings
+==================
   General
   -------
   g                     Toggle between First Person and 'God' mode
@@ -15,11 +71,26 @@ Key Bindings
   t                     Toggle terrain on/off
   T                     Toggle terrain mesh on/off
   n                     Toggle terrain normals on/off
+  o                     Toggle water on/off
+  shift+w / W           Cycle through water shaders (only 2 at the moment)
+  m                     Toggle water reflection on/off
+  b                     Toggle biomes
+  shift+b / B           Toggle terrain texturing 'quality'
+  shift+s / S           Toggle biome shaders
+  v                     Toggle vegetation on/off
+  p                     Toggle water on/off
+  shift+h / H           Cycle through heightmaps
+  -                     Lower heightmap
+  =                     Raise heightmap
+  shift+P / P           Generate new heightmap via Perlin noise
+  [                     Increase render distance (+5 pixels)
+  ]                     Decrease render distance (-5 pixels)
 
   Skybox / Lighting
   -----------------
   r                     Toggle skybox rotation
   R                     Change skybox rotation rates
+  shift+n / N           Toggle skybox on/off
   shift+l / L           Toggle Lighting On/Off
   shift+k               Toggle Light Control Mode
 
@@ -32,7 +103,9 @@ Key Bindings
   Camera Controls
   ---------------
   0                     Toggle view mode (view all cameras simultaneously ON/OFF)
-  m/M                   Switch between cameras (left, center, right) in primary viewport
+  M                     Switch between cameras (left, center, right) in primary viewport
+  -/=                   Increase/decrease Field of View (FOV)
+  y                     Toggle record to bmp. Images saves to data_collection folder.
 
   Player Controls
   ---------------
@@ -43,21 +116,15 @@ Key Bindings
   z/c                   Move up/down in y-direction
   q/e                   Strafe left/right
   Mouse (left click)    Toggle mouse look mode. View follows mouse when enabled.
+  spacebar              Jump! (First-Person mode only)
 
+(IV) Code References
+====================
+1. Core structure of program derived from Willem A. (Vlakkies) Schreüder's code for CSCI 5229 at CU Boulder
+2. Perlin noise code: https://github.com/Reputeless/PerlinNoise
+3. Image loading code: https://github.com/nothings/stb
+4. Various code used for cubemaps, VAOs, shaders, etc. was derived from the tutorial website: https://learnopengl.com/
+5. GL mathematics library: https://glm.g-truc.net/0.9.9/index.html
+6. Fractal tree code was inspired by The Coding Train, "Fractal Trees - Recursive": https://www.youtube.com/watch?v=0jjeOYMjmDU
 
-Remaining Work
-==============
-Primary
--------
-- Add 3d trees and boulders
-- Add path
-- Bind camera to path and enable auto-follow
-- Fix lighting
-- Fix writing to bmp/png function (currently crashes the application)
-
-Secondary, if time permits
---------------------------
-- Convert skybox to cubemap
-- Update water shader to reflect skybox
-- Add shadows
-- Post-processing effects (rain, underwater effect, etc.)
+(V) Time Spent
